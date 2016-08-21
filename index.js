@@ -8,23 +8,13 @@ let etpl_theme = new etpl.Engine();
 
 /* global hexo */
 
-// add register 'fn'
-[etpl, etpl_theme].forEach(
-    engine => engine.addFilter('fn', (fn, ...args) =>
-        typeof fn == "function" ? fn(...args) : fn
-    )
-);
-
 // config etpl
 let etpl_config = hexo.config.etpl_config || {};
 etpl.config(etpl_config);
 
 // config etpl_theme
-let etpl_theme_config = hexo.etplConfig || {};
-etpl_theme.config(etpl_theme_config);
-
-let commands = hexo.etplCommands || {};
-let filters = hexo.etplFilters || {};
+let {config = {}, commands = {}, filters = {}} = hexo.theme.config.etpl_renderer || {};
+etpl_theme.config(config);
 for (let name in commands) {
     etpl_theme.addCommand(name, commands[name]);
 }

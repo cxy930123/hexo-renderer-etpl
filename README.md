@@ -1,46 +1,22 @@
 # hexo-renderer-etpl
 
-[Hexo](https://hexo.io/) plugin. Add support for [ETPL].
+为[Hexo](https://hexo.io/zh-cn/)开发的etpl渲染插件。（[ETPL](https://ecomfe.github.io/etpl/)是一个强复用、灵活、高性能的JavaScript模板引擎。）
 
-为[Hexo](https://hexo.io/zh-cn/)开发的etpl渲染插件。（[ETPL]是一个强复用、灵活、高性能的JavaScript模板引擎。）
+## 安装
 
-
-## 安装(Installation)
-
+使用如下命令进行安装：
 
 ``` bash
 $ npm install cxy930123/hexo-renderer-etpl --save
 ```
 
-## 使用辅助函数(Use Helpers)
+## 配置
 
-一般情况下，我们没有办法在[ETPL]中使用辅助函数。
+对于文章和页面的渲染，以及主题中模板文件的渲染，此插件用了两个不同的渲染引擎实例。因此，博客使用者和主题开发者可以在不同的位置对插件进行配置。
 
-We cannot use Helpers in [ETPL] by default.
+### 渲染文章和页面
 
-```js
-${partial('header')|raw} // 这样是没用的 (Useless)
-```
-
-因此，插件中定义了一个过滤器`fn`，用来执行辅助函数。实际上，你可以通过`fn`来执行任何函数。
-
-So, I add a filter `fn` in the plugin to make Helps work. Actually, you can execute any funciton by using `fn`.
-
-```js
-${*partial|fn('header')}
-```
-
-请注意，为了提高效率，**辅助函数前必须加`*`号**，才能让`fn`正常工作。另外，由于替换了默认的`html`过滤器，不用再加`raw`过滤器就可以输出原始内容。
-
-For efficiency, **there must be a `*` before the helper** to make the `fn` work. Besides, the default `html` filter is replaced by this filter, so you needn't add a `raw` filter to print raw content.
-
-## 配置(Configuration)
-
-### 渲染文章和页面(Render posts and pages)
-
-你可以在`_config.yml`文件中配置引擎的参数。
-
-You can config this plugin in `_config.yml` to set etpl config.
+对于文章和页面的渲染，博客使用者可以在`_config.yml`文件中配置引擎的参数。
 
 ```yaml
 etpl_config:
@@ -50,25 +26,19 @@ etpl_config:
 
 想了解更多的配置参数请看[这里](https://github.com/ecomfe/etpl/blob/master/doc/config.md#config)。
 
-For more infomation about etpl config see [here](https://github.com/ecomfe/etpl/blob/master/doc/config.md#config).
+**注意：**　`_config.yml`文件中的这些配置只在渲染文章和页面时生效。
 
-**注意：**　这些配置只在渲染文章和页面时生效。
+### 渲染主题文件夹中的文件
 
-**Notice:** It only takes effect when rendering posts and pages.
-
-### 渲染主题中的文件(Render `*.etpl` file in theme)
-
-你可以在主题的脚本文件中进行配置。
-
-You can config this plugin within a Hexo theme script.
+对于主题文件夹中文件的渲染，主题开发者可以在主题的脚本文件中进行配置。
 
 ```javascript
-hexo.etplConfig = {
+let config = {
   variableOpen: '<%',
   variableClose: '%>'
 };
 
-hexo.etplCommands = {
+let commands = {
   'dump': {
     init: function () {
       var match = this.value.match(/^\s*([a-z0-9_]+)\s*$/i);
@@ -95,21 +65,34 @@ hexo.etplCommands = {
   }
 };
 
-hexo.etplFilters = {
-  'markdown': function ( source, useExtra ) {
-    // ......
-  }
+let filters = {
+  'fn': (fn, ...args) => typeof fn == "function" ? fn(...args) : fn
+};
+
+hexo.theme.config.etpl_renderer = {
+  config: config,
+  commands: commands,
+  filters: filters
 };
 ```
 
-有三个`hexo`的属性可以用于配置(Three properties of `hexo` are used)：
+有三个属性可以用于配置：
 
-* `hexo.etplConfig` - `Object`类型，配置引擎参数，详见[这里](https://github.com/ecomfe/etpl/blob/master/doc/config.md#config)。An `Object` as ETPL Config, see [here](https://github.com/ecomfe/etpl/blob/master/doc/config.md#config).
-* `hexo.etplCommands` - `Object`类型，用于添加自定义标签。其中键名为命令标签名称，值为命令对象。更多信息请看[这里](https://github.com/ecomfe/etpl/blob/master/doc/api.md#addcommand)。An `Object` used to add commands. Object key is command name, and object value is a command object. For more information, see [here](https://github.com/ecomfe/etpl/blob/master/doc/api.md#addcommand).
-* `hexo.etplFilters` - `Object`类型，用于添加过滤器。其中键名为过滤器名称，值为过滤函数。你甚至可以在此处重写`fn`过滤器。更多信息请看[这里](https://github.com/ecomfe/etpl/blob/master/doc/api.md#addfilter)。An `Object` used to add filters. Object key is filter name, and object value is filter function. You can even override filter `fn` through it. For more information, see [here](https://github.com/ecomfe/etpl/blob/master/doc/api.md#addfilter).
+* `config` - `Object`类型，配置引擎参数，更多参数请看[这里](https://github.com/ecomfe/etpl/blob/master/doc/config.md#config)。
+* `commands` - `Object`类型，用于添加自定义标签。其中键名为命令标签名称，值为命令对象。关于命令的详细信息请看[这里](https://github.com/ecomfe/etpl/blob/master/doc/api.md#addcommand)。
+* `filters` - `Object`类型，用于添加过滤器。其中键名为过滤器名称，值为过滤函数。关于过滤器的更多信息请看[这里](https://github.com/ecomfe/etpl/blob/master/doc/api.md#addfilter)。
+
+这三个属性是在`hexo.theme.config.etpl_renderer`上的。实际上，直接在主题文件夹的`_config.yml`文件中也可以配置引擎参数。只是由于无法在`_config.yml`文件中定义函数，因此无法配置其余两项。
 
 **注意：** 这些主题脚本中的配置只对渲染`themes`文件夹中的模板有效。
 
-**Notice:** The configuration in theme script file only takes effect when rendering files in `themes` folder.
+## 提示
 
-[ETPL]: https://ecomfe.github.io/etpl/
+### 使用辅助函数
+
+你可以向下面这样使用辅助函数。
+
+```js
+<!-- var: header = ${partial}('header') -->
+${header|raw}
+```

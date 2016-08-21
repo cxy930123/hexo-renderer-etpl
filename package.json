@@ -1,6 +1,6 @@
 {
   "name": "hexo-renderer-etpl",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "ETPL renderer plugin for Hexo",
   "main": "index",
   "repository": {
